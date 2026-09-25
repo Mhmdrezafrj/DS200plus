@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <meta name="description" content="DS200+ — دستیار مطالعه معکوس برای امتحانات نهایی دوازدهم تجربی">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+  <title>DS200+ v0.1</title>
+</head>
+<body>
+<header class="topbar">
+  <div>
+    <div class="brand">DS200+</div>
+    <div class="sub">Reverse Teacher · نسخه ۰.۱</div>
+  </div>
+  <button id="installBtn" class="ghost hidden">نصب</button>
+</header>
+
+<main>
+  <section id="home" class="screen active">
+    <div class="hero card">
+      <span class="pill">۱۲م تجربی · امتحان نهایی</span>
+      <h1>تو معلمی؛ من دانش‌آموزم.</h1>
+      <p>موضوع را توضیح بده. من سؤال می‌پرسم، ابهام پیدا می‌کنم و در صورت گیرکردن، به صفحه منبع برمی‌گردانمت.</p>
+      <button class="primary" data-go="session">شروع جلسه Reverse Teacher</button>
+    </div>
+    <div class="grid">
+      <button class="tile" data-go="library"><b>📚 کتابخانه</b><span id="bookCount">۰ منبع</span></button>
+      <button class="tile" data-go="review"><b>🔄 مرور</b><span id="reviewCount">۰ مورد</span></button>
+      <button class="tile" data-go="exam"><b>📝 حالت امتحان</b><span>تمرین تشریحی</span></button>
+      <button class="tile" data-go="progress"><b>📊 پیشرفت</b><span id="weakCount">۰ ضعف ثبت‌شده</span></button>
+    </div>
+    <div class="card">
+      <h3>قانون DS200+</h3>
+      <p class="muted">جواب آماده آخرین گزینه است. اول فکر → راهنمایی → صفحه منبع → توضیح دوباره → سپس پاسخ کوتاه.</p>
+    </div>
+  </section>
+
+  <section id="library" class="screen">
+    <div class="sectionHead"><h2>📚 کتابخانه منابع</h2><button class="ghost" data-go="home">خانه</button></div>
+    <div class="card">
+      <label>افزودن PDF
+        <input id="pdfInput" type="file" accept="application/pdf">
+      </label>
+      <p class="hint">فایل در فضای محلی مرورگر ذخیره می‌شود؛ در این نسخه PDF به سرویس ابری ارسال نمی‌شود.</p>
+    </div>
+    <div id="books" class="list"></div>
+  </section>
+
+  <section id="session" class="screen">
+    <div class="sectionHead"><h2>🧑‍🏫 Reverse Teacher</h2><button class="ghost" data-go="home">خانه</button></div>
+    <div class="card">
+      <div class="row wrap">
+        <label>درس
+          <select id="subject">
+            <option>زیست‌شناسی</option><option>شیمی</option><option>فیزیک</option><option>ریاضی</option>
+          </select>
+        </label>
+        <label>اهمیت
+          <select id="importance">
+            <option value="high">🔴 بالا</option><option value="medium">🟡 متوسط</option><option value="low">🟢 پایین</option>
+          </select>
+        </label>
+      </div>
+      <label>مبحث
+        <input id="topic" placeholder="مثلاً: واکنش‌های اکسایش و کاهش">
+      </label>
+      <label>صفحه منبع
+        <input id="page" type="number" min="1" placeholder="مثلاً ۴۲">
+      </label>
+      <button id="startSession" class="primary">شروع پرسش‌گری</button>
+    </div>
+
+    <div id="sessionArea" class="card hidden">
+      <div id="importanceBadge" class="importance high">🔴 اهمیت بالا</div>
+      <p id="question" class="question"></p>
+      <div class="voiceRow">
+        <button id="speakQ" class="ghost">🔊 خواندن سؤال</button>
+        <button id="voiceInput" class="ghost">🎙️ پاسخ صوتی</button>
+      </div>
+      <textarea id="answer" rows="6" placeholder="اینجا مثل یک معلم برای من توضیح بده..."></textarea>
+      <div class="row">
+        <button id="submitAnswer" class="primary">بررسی پاسخ</button>
+        <button id="hintBtn" class="ghost">💡 راهنمایی</button>
+      </div>
+      <div id="feedback" class="feedback hidden"></div>
+      <div id="sourceRef" class="source hidden"></div>
+      <button id="nextQ" class="primary hidden">سؤال بعدی</button>
+    </div>
+  </section>
+
+  <section id="exam" class="screen">
+    <div class="sectionHead"><h2>📝 حالت امتحان</h2><button class="ghost" data-go="home">خانه</button></div>
+    <div class="card">
+      <label>درس
+        <select id="examSubject"><option>زیست‌شناسی</option><option>شیمی</option><option>فیزیک</option><option>ریاضی</option></select>
+      </label>
+      <label>مبحث
+        <input id="examTopic" placeholder="موضوعی که خوانده‌ای">
+      </label>
+      <button id="makeExam" class="primary">تولید تمرین تشریحی</button>
+    </div>
+    <div id="examArea" class="card hidden">
+      <div class="pill">تمرین تشریحی</div>
+      <p id="examQuestion" class="question"></p>
+      <textarea id="examAnswer" rows="7" placeholder="پاسخ کامل امتحانی را بنویس..."></textarea>
+      <button id="checkExam" class="primary">خودارزیابی پاسخ</button>
+      <div id="examFeedback" class="feedback hidden"></div>
+    </div>
+  </section>
+
+  <section id="review" class="screen">
+    <div class="sectionHead"><h2>🔄 مرور و ضعف‌ها</h2><button class="ghost" data-go="home">خانه</button></div>
+    <div id="reviewList" class="list"></div>
+  </section>
+
+  <section id="progress" class="screen">
+    <div class="sectionHead"><h2>📊 پیشرفت</h2><button class="ghost" data-go="home">خانه</button></div>
+    <div class="stats">
+      <div class="stat card"><b id="statSessions">۰</b><span>جلسه</span></div>
+      <div class="stat card"><b id="statQuestions">۰</b><span>سؤال</span></div>
+      <div class="stat card"><b id="statWeak">۰</b><span>ضعف</span></div>
+    </div>
+    <div class="card">
+      <h3>معماری نسخه ۰.۱</h3>
+      <p>ذخیره محلی + موتور پرسش‌گری اولیه + رابط آماده برای اتصال به مدل ابری/محلی در نسخه بعد.</p>
+    </div>
+  </section>
+</main>
+
+<nav class="nav">
+  <button data-go="home">🏠<span>خانه</span></button>
+  <button data-go="library">📚<span>منابع</span></button>
+  <button data-go="session">🧑‍🏫<span>معلم معکوس</span></button>
+  <button data-go="review">🔄<span>مرور</span></button>
+  <button data-go="progress">📊<span>پیشرفت</span></button>
+</nav>
+
+<script src="app.js"></script>
+</body>
+</html>
