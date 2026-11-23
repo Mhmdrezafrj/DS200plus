@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Build APK
 
 on:
   push:
@@ -6,43 +6,51 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
+  contents: write
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Prepare site (unzip if a zip is uploaded)
-        run: |
-          mkdir _site
-          ZIP=$(ls *.zip 2>/dev/null | head -1 || true)
-          if [ -n "$ZIP" ]; then
-            unzip -o -q "$ZIP" -d _site
-            IDX=$(find _site -name index.html | head -1)
-            DIR=$(dirname "$IDX")
-            if [ "$DIR" != "_site" ]; then
-              cp -r "$DIR"/. _site/
-            fi
-          else
-            cp -r index.html _site/
-          fi
-          test -f _site/index.html
-          ls -la _site
-
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/setup-node@v4
         with:
-          path: _site
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Unzip project
+        run: |
+          mkdir proj
+          unzip -o -q "$(ls *.zip | head -1)" -d proj
+          P=$(dirname "$(find proj -name package.json -not -path '*/node_modules/*' | head -1)")
+          echo "PROJ=$P" >> $GITHUB_ENV
+
+      - name: Install and add Android
+        run: |
+          cd "$PROJ"
+          npm install
+          npx cap add android
+          npx cap sync android
+
+      - name: Build debug APK
+        run: |
+          cd "$PROJ/android"
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-apk
+          path: ${{ env.PROJ }}/android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publish to Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete apk-latest -y --cleanup-tag || true
+          gh release create apk-latest "$PROJ/android/app/build/outputs/apk/debug/app-debug.apk" --title "APK" --notes "Debug build"
